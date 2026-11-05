@@ -1,5 +1,9 @@
 #include <Arduino.h>
 #include <Wifi.h>
+#include <WebServer.h>
+
+WebServer server(80);
+
 
 const char *signalStrength(int rssi)
 {
@@ -78,11 +82,20 @@ const char *getSecurity(int type)
   }
 }
 
+void handleRoot()
+{
+  server.send(200,"text/html", "<h1> WiFiScope </h1>" "<p> WiFi Analyzer is running! </p>");
+}
+void handleNotFound()
+{
+  server.send(404,"text/html", "<h1> 404 - Paga Not Found </h1>" "<p> The requested page does not exist. </p>" "<a href = '/'> Rethurn to WifiScope </a>"); 
+}
+
 void setup() 
 {
   Serial.begin(115200);
-  WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP("WiFiScope");
   delay(1000);
 
   Serial.println("====== WifiScope ======");
@@ -138,29 +151,57 @@ void setup()
   }
 
   int bestChannel = candidateChannels[0];
-  int lowestCongestion = congestion[bestChannel-1];
+  int bestCongestionCandidate = congestion[bestChannel-1];
+  int maxCongestion = congestion[0];
 
   for(int i=1;i<3;i++)
   {
     int currentChannel = candidateChannels[i];
     int currentCongestion = congestion[currentChannel-1];
 
-    if(currentCongestion < lowestCongestion)
+    if(currentCongestion < bestCongestionCandidate)
     {
-      lowestCongestion = currentCongestion;
+      bestCongestionCandidate = currentCongestion;
       bestChannel = currentChannel;
     }
   }
-  Serial.println("\n===== Channel Recomendation =====");
+
+  for(int i=0;i<14;i++)
+  {
+    if(congestion[i] > maxCongestion)
+    {
+      maxCongestion = congestion[i];
+    }
+  }
+
+  float relativeCongestion ;
+  if (maxCongestion > 0)
+  {
+    relativeCongestion = ((float)bestCongestionCandidate / maxCongestion)*100.0;
+  }
+  else 
+  {
+    relativeCongestion = 0.0;
+  }
+
+  Serial.println("\n===== Channel Analysis =====");
   Serial.printf("Recommended Channel is : %d\n", bestChannel);
-  Serial.printf("Congestion Score is : %d\n", lowestCongestion);
+  Serial.printf("Congestion Score is : %d\n", bestCongestionCandidate);
+  Serial.printf(" Relative Congestion is : %.2f%%\n", relativeCongestion);
+
+  server.on("/", handleRoot);
+  server.onNotFound(handleNotFound);
+  server.begin();
+
+  Serial.println("\n====== WiFiScope Server ======");
+  Serial.println(" Status : 🟢 Running ");
+  Serial.println("WiFi Network : WiFiScope");
+  Serial.print("IP Address : ");
+  Serial.println(WiFi.softAPIP());
 }
-
-
-
 
 
 void loop () 
 {
-
+  server.handleClient();
 }
