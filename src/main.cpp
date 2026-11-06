@@ -131,11 +131,20 @@ void handleJS()
 }
 void handleData () 
 {
-  char json[200];
-  snprintf(json, sizeof(json), "{\"networks\":%d,\"bestChannel\":%d,\"congestionScore\":%d,\"relativeCongestion\":%.2f}", networks, bestChannel, bestCongestionCandidate, relativeCongestion);
-
-  server.send(200, "application/json", json);
-}
+  char json[5000];
+  int position =0;
+  position+=snprintf(json+position, sizeof(json)-position, "{\"networks\":%d,", networks);
+  position+=snprintf(json + position, sizeof(json)-position, "\"bestChannel\":%d,\"congestionScore\":%d,\"relativeCongestion\":%.2f,", bestChannel, bestCongestionCandidate, relativeCongestion);
+  position+=snprintf(json+position, sizeof(json)-position, "\"networkList\":[");
+  for(int i=0; i<networks; i++)
+    {
+      position+=snprintf(json+position, sizeof(json)-position, "{\"ssid\":\"%s\",\"signal\":\"%s\",\"rssi\":%ld,\"channel\":%ld,\"security\":\"%s\"}", WiFi.SSID(i).c_str(), signalStrength(WiFi.RSSI(i)), WiFi.RSSI(i), WiFi.channel(i), getSecurity(WiFi.encryptionType(i)));
+      if(i < networks-1)
+        position+=snprintf(json+position, sizeof(json)-position, ",");
+    }
+    position += snprintf(json+position, sizeof(json)-position, "]}");
+    server.send(200, "application/json", json);
+} 
 void setup() 
 {
   Serial.begin(115200);
