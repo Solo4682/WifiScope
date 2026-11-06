@@ -24,6 +24,8 @@ _**Hardware Required : An esp-32 which can minimum read WiFi 2.4Ghz signal**_;
 
 To refer more about setting up PlatformIO visit "https://docs.platformio.org/en/latest/core/quickstart.html"
 
+Bill of materials : 1 x ESP-32-S3 Devkit -- $10 (approx)
+
 
 Planning on introduce the following : Live rescaning
                                       Mathematical interpretation of the data by using graphs
