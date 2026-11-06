@@ -18,6 +18,6 @@ Download the code, initialize VS-code with PlatformIO and run the code;
 You shall be seeing your esp-32's local website address;
 Connect to your esp-32's locally held WiFi named WiFiScope and open the website address.
 
-Hardware Required : An esp-32 which can minimum read WiFi 2.5Ghz signals;
+_**Hardware Required : An esp-32 which can minimum read WiFi 2.5Ghz signal**_;
 
 To refer more about setting up PlatformIO visit "https://docs.platformio.org/en/latest/core/quickstart.html"
