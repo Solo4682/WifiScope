@@ -7,6 +7,7 @@ The program shows the signal name, signal strength, signal security, and channel
 *THIS PROJECT IS STILL UNDER CONSTRUCTION*
 
 <img width="591" height="1280" alt="WhatsApp Image 2026-11-06 at 11 56 58 PM" src="https://github.com/user-attachments/assets/51318777-27c6-4f5f-bd72-ddc96670dbff" />
+
 This is an example of how the web-page looks.
 
 
