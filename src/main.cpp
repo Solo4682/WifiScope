@@ -1,8 +1,14 @@
 #include <Arduino.h>
 #include <Wifi.h>
 #include <WebServer.h>
+#include <LittleFS.h>
 
 WebServer server(80);
+int networks;
+int congestion[14] = {0};
+int bestChannel;
+int bestCongestionCandidate;
+float relativeCongestion;
 
 
 const char *signalStrength(int rssi)
@@ -84,16 +90,62 @@ const char *getSecurity(int type)
 
 void handleRoot()
 {
-  server.send(200,"text/html", "<h1> WiFiScope </h1>" "<p> WiFi Analyzer is running! </p>");
+  File file = LittleFS.open("/index.html", "r");
+  if(!file)
+  {
+    server.send(500, "text/plain", "Failed to load index.html");
+    return;
+  }
+  server.streamFile(file, "text/html");
+  file.close();
 }
 void handleNotFound()
 {
   server.send(404,"text/html", "<h1> 404 - Paga Not Found </h1>" "<p> The requested page does not exist. </p>" "<a href = '/'> Rethurn to WifiScope </a>"); 
 }
+void handleCSS ()
+{
+  File file = LittleFS.open("/style.css", "r");
 
+  if(!file)
+  {
+    server.send(500, "text/plain", "Failed to load style.css");
+    return;
+  }
+
+  server.streamFile(file, "text/css");
+  file.close();
+}
+void handleJS()
+{
+  File file = LittleFS.open("/script.js", "r");
+
+  if(!file)
+  {
+    server.send(500, "text/plain", "Failed to load script.js");
+    return;
+  }
+
+  server.streamFile(file, "application/javascript");
+  file.close();
+}
+void handleData () 
+{
+  char json[200];
+  snprintf(json, sizeof(json), "{\"networks\":%d,\"bestChannel\":%d,\"congestionScore\":%d,\"relativeCongestion\":%.2f}", networks, bestChannel, bestCongestionCandidate, relativeCongestion);
+
+  server.send(200, "application/json", json);
+}
 void setup() 
 {
   Serial.begin(115200);
+  delay(2000);
+  Serial.println("SETUP STARTED");
+  if(!LittleFS.begin(true))
+  {
+    Serial.println("LittleFS failed to start!!");
+  }
+  
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP("WiFiScope");
   delay(1000);
@@ -101,8 +153,7 @@ void setup()
   Serial.println("====== WifiScope ======");
   Serial.println("Scanning to find available networks...");
   
-  int networks = WiFi.scanNetworks();
-  int congestion[14] = {0};
+  networks = WiFi.scanNetworks();
   int channelCount[14] = {0};
   int candidateChannels[3] = {1,6,11};
 
@@ -149,9 +200,8 @@ void setup()
   {
     Serial.printf("Channel %d : Congestion Rate = %d\n", i+1, congestion[i]);
   }
-
-  int bestChannel = candidateChannels[0];
-  int bestCongestionCandidate = congestion[bestChannel-1];
+  bestChannel = candidateChannels[0];
+  bestCongestionCandidate = congestion[bestChannel - 1];
   int maxCongestion = congestion[0];
 
   for(int i=1;i<3;i++)
@@ -174,7 +224,6 @@ void setup()
     }
   }
 
-  float relativeCongestion ;
   if (maxCongestion > 0)
   {
     relativeCongestion = ((float)bestCongestionCandidate / maxCongestion)*100.0;
@@ -190,6 +239,9 @@ void setup()
   Serial.printf(" Relative Congestion is : %.2f%%\n", relativeCongestion);
 
   server.on("/", handleRoot);
+  server.on("/style.css", handleCSS);
+  server.on("/script.js", handleJS);
+  server.on("/api/data", handleData);
   server.onNotFound(handleNotFound);
   server.begin();
 
