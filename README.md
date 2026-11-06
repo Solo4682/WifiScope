@@ -11,7 +11,7 @@ The program shows the signal name, signal strength, signal security, and channel
 This is an example of how the web-page looks.
 
 
-***To set it up :****
+***To set it up :***
 
 *You will need to install the PlatformIO extension which helps directly code to your micro-controllers from VS-Code;
 Download the code, initialize VS-code with PlatformIO and run the code;
